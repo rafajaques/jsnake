@@ -9,14 +9,15 @@
  */
 
 // Config
-var _board_x = 20; // From 1 to 25
-var _board_y = 20; // From 1 to 25
-var _speed = 100; // In miliseconds. The lowest, the fastest
+var _board_x = 20; // From 1 to anything (max 25 recommended)
+var _board_y = 20; // From 1 to anything (max 25 recommended)
+var _speed = 80; // In miliseconds - the lowest, the fastest
 var _debug = true; // Display debug info
 
-// Game variables
+// Game variables (customize game here)
 
 	/* x and y arrays indicating where the snake is */
+	/* also this is the start position */
 	var _x = [7, 6, 5, 4, 3];
 	var _y = [2, 2, 2, 2, 2];
 
@@ -25,7 +26,7 @@ var _debug = true; // Display debug info
 	var _objective_x = null;
 	var _objective_y = null;
 
-	/* direction */
+	/* to which direction am I going to? */
 	var _dir = null;
 	
 	/* does the snake have to grow? */
@@ -38,42 +39,60 @@ var _debug = true; // Display debug info
 	/* color pallete */
 	var _color = {
 		board: "#fff",
-		sh: "#00a" /* snake head */,
-		sb: "#00f" /* snake body */,
+		sh: "#00a", /* snake head */
+		sb: "#00f", /* snake body */
 		obj: "#f00" /* objective */
 	}
 	
 	/* starting score */
 	var _score = 0;
 	
+	/* movement buffer to avoid snake's death inside itself */
+	var _buffer = [];
+	
+	/* key codes */
+	var K_SPACE = 32;
+	var K_LEFT = 37;
+	var K_UP = 38;
+	var K_RIGHT = 39;
+	var K_DOWN = 40;
 
 $(document).keydown(function(e){
 
-	// LEFT    
-	if (e.keyCode == 37) {
-		if (_dir != "R")
-			_dir = "L"
+	/* pause game */
+	if (e.keyCode == K_SPACE) {
+		_pause = !_pause
 		return false;
 	}
-	// UP    
-	else if (e.keyCode == 38) { 
-		if (_dir != "D")
-			_dir = "U"
-		return false;
+
+	/* get buffer size to know if we have to buffer something */
+	buffsize = _buffer.length;
+
+	// Do we have any buffered move?
+	last_move = buffsize ? _buffer[buffsize - 1] : _dir;
+
+	if (e.keyCode == K_LEFT) {
+		if (last_move != "R")
+			_dir = last_move = "L"
 	}
-	// RIGHT
-	else if (e.keyCode == 39) {
-		if (_dir != "L")
-			_dir = "R"
-		return false;
+	else if (e.keyCode == K_UP) { 
+		if (last_move != "D")
+			_dir = last_move = "U"
 	}
-	// DOWN   
-	else if (e.keyCode == 40) { 
-		if (_dir != "U")
-			_dir = "D"
-		return false;
+	else if (e.keyCode == K_RIGHT) {
+		if (last_move != "L")
+			_dir = last_move = "R"
 	}
+	else if (e.keyCode == K_DOWN) { 
+		if (last_move != "U")
+			_dir = last_move = "D"
+	}
+
+	_buffer.push(_dir)
 	
+	if (e.keyCode >= 37 && e.keyCode <= 40) {
+		return false;
+	}
 });
 
 // Runs the game! :)
@@ -85,16 +104,17 @@ $(function() {
 });
 
 function runGame() {
-	drawSnake();
+	if (!_pause) {
+		drawSnake();
 	
-	if (_dir)
-		step();
+		if (_dir)
+			step();
 	
-	placeObjective();
+		placeObjective();
 	
-	if (detectCollision()) {
-		alert("You lose!");
-		return false;
+		if (detectCollision()) {
+			return gameOver();
+		}
 	}
 	
 	// Next step
@@ -137,8 +157,7 @@ function detectCollision() {
 
 function step() {
 	// Place debug info on screen
-	if (_debug)
-		debug("score: " + _score  + " x: " + _x[0] + " y: " + _y[0] + " objective-x: " + _objective_x + " objective-y: " + _objective_y + " speed: " + _speed)
+	debug("score: " + _score  + " x: " + _x[0] + " y: " + _y[0] + " objective-x: " + _objective_x + " objective-y: " + _objective_y + " speed: " + _speed)
 	
 	// Gets snake size
 	snake_size = _x.length
@@ -164,14 +183,24 @@ function step() {
 		_score++;
 	}
 
+	// Get buffer size
+	buffsize = _buffer.length
+	
+	// Place movement value as direction
+	mov = _dir
+	
+	// If we have any buffer, let's get it going
+	if (buffsize)
+		mov = _buffer.shift();
+	
 	// Do the movement
-	if (_dir == "U")
+	if (mov == "U")
 		_y[0] -= 1;
-	else if (_dir == "R")
+	else if (mov == "R")
 		_x[0] += 1;
-	else if (_dir == "D")
+	else if (mov == "D")
 		_y[0] += 1;
-	else if (_dir == "L")
+	else if (mov == "L")
 		_x[0] -= 1;
 		
 	// Collision test with the objective
@@ -204,6 +233,11 @@ function placeObjective() {
 	$("#" + _objective_y + "-" + _objective_x).css("backgroundColor", _color["obj"]);
 }
 
+function gameOver() {
+	alert("You lose! F5 to play again.");
+	return false;
+}
+
 
 function createBoard() {
 	var board = "";
@@ -222,7 +256,6 @@ function createBoard() {
 }
 
 function debug(msg) {
-	$("#debug").html(msg);
+	if (_debug)
+		$("#debug").html("Debug info: " + msg);
 }
-
-
