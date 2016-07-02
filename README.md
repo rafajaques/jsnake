@@ -3,6 +3,7 @@ JSnake
 
 Javascript snake game based on an HTML table (proof-of-concept project).
 Don't take it seriously. ;)
+Any upgrade would be welcome.
 
 Live demo: http://rafajaques.com.br/dev/jsnake/
 
