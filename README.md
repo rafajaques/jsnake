@@ -2,6 +2,7 @@ JSnake
 ======
 
 Javascript snake game based on an HTML table (proof-of-concept project).
+I created it for testing some jQuery features.
 Don't take it seriously. ;)
 Any upgrade would be welcome.
 
